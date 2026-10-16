@@ -1,0 +1,36 @@
+<UserControl x:Class="WinOptimizer.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             AutomationProperties.Name="WinOptimizer settings">
+  <StackPanel>
+    <Border Style="{StaticResource CardStyle}" Padding="20" Margin="0,0,0,12">
+      <StackPanel>
+        <TextBlock Text="Appearance and monitoring" Style="{StaticResource SectionHeadingStyle}" />
+        <TextBlock Text="Theme" Foreground="{DynamicResource TextPrimary}" FontSize="11.5" FontWeight="SemiBold" Margin="0,18,0,6" />
+        <ComboBox ItemsSource="{Binding ThemeOptions}" SelectedItem="{Binding Theme}" MinHeight="36" MaxWidth="310" HorizontalAlignment="Left" AutomationProperties.Name="Application theme" />
+        <TextBlock Text="Dark and light themes update the complete interface. System follows the Windows app-color preference." Style="{StaticResource MutedTextStyle}" FontSize="10.5" Margin="0,6,0,0" />
+        <TextBlock Text="Monitoring interval · seconds" Foreground="{DynamicResource TextPrimary}" FontSize="11.5" FontWeight="SemiBold" Margin="0,18,0,6" />
+        <ComboBox ItemsSource="{Binding PollOptions}" SelectedItem="{Binding PollInterval}" MinHeight="36" MaxWidth="310" HorizontalAlignment="Left" AutomationProperties.Name="Monitoring interval in seconds" />
+        <TextBlock Text="Monitoring slows to at least 10 seconds when the window is minimized. The history buffer is bounded and kept in memory." Style="{StaticResource MutedTextStyle}" FontSize="10.5" Margin="0,6,0,0" />
+        <TextBlock Text="Visible history duration · minutes" Foreground="{DynamicResource TextPrimary}" FontSize="11.5" FontWeight="SemiBold" Margin="0,18,0,6" />
+        <ComboBox ItemsSource="{Binding HistoryOptions}" SelectedItem="{Binding HistoryDuration}" MinHeight="36" MaxWidth="310" HorizontalAlignment="Left" AutomationProperties.Name="History duration in minutes" />
+      </StackPanel>
+    </Border>
+
+    <Border Style="{StaticResource CardStyle}" Padding="20" Margin="0,0,0,12">
+      <StackPanel>
+        <TextBlock Text="Recommendation detail" Style="{StaticResource SectionHeadingStyle}" />
+        <TextBlock Text="{Binding Level}" Foreground="{DynamicResource Accent}" FontSize="16" FontWeight="SemiBold" Margin="0,8,0,0" />
+        <ComboBox ItemsSource="{Binding LevelOptions}" SelectedItem="{Binding Level}" MinHeight="36" MaxWidth="310" HorizontalAlignment="Left" Margin="0,8,0,0" AutomationProperties.Name="Recommendation profile" />
+        <TextBlock Text="Safe is the default. Balanced and Advanced lower the evidence thresholds for review items. These profiles do not turn on undocumented system tweaks, disable security, or apply changes automatically." Style="{StaticResource MutedTextStyle}" FontSize="10.5" Margin="0,8,0,0" />
+      </StackPanel>
+    </Border>
+
+    <Border Style="{StaticResource CardStyle}" Padding="20">
+      <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+        <StackPanel><TextBlock Text="Privacy and local data" Style="{StaticResource SectionHeadingStyle}" /><TextBlock Text="Telemetry and diagnostic uploads are not implemented. Settings, bounded change history, startup backups, and local error logs are stored under your Local AppData profile. You can remove these files after uninstall." Style="{StaticResource MutedTextStyle}" Margin="0,7,12,0" /><TextBlock Text="{Binding SaveStatus}" Foreground="{DynamicResource Accent}" FontSize="10.5" Margin="0,8,0,0" /></StackPanel>
+        <StackPanel Grid.Column="1" VerticalAlignment="Center"><Button Content="Run setup again" Command="{Binding RestartSetupCommand}" Style="{StaticResource SecondaryButtonStyle}" Padding="14,9" /><TextBlock Text="No sign-in or cloud account" Style="{StaticResource MutedTextStyle}" FontSize="9.5" HorizontalAlignment="Center" Margin="0,7,0,0" /></StackPanel>
+      </Grid>
+    </Border>
+  </StackPanel>
+</UserControl>

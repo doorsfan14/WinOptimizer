@@ -1,0 +1,143 @@
+<UserControl x:Class="WinOptimizer.Views.OverviewView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:WinOptimizer.Controls"
+             Background="Transparent" AutomationProperties.Name="System overview">
+  <UserControl.Resources>
+    <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+  </UserControl.Resources>
+  <StackPanel>
+    <Border Style="{StaticResource CardStyle}" Padding="17" Margin="0,0,0,14">
+      <Grid>
+        <Grid.ColumnDefinitions><ColumnDefinition Width="5" /><ColumnDefinition Width="15" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+        <Border Background="{DynamicResource Accent}" CornerRadius="2" />
+        <StackPanel Grid.Column="2">
+          <TextBlock Text="{Binding SystemStatusTitle}" Foreground="{DynamicResource TextPrimary}" FontSize="15" FontWeight="SemiBold" />
+          <TextBlock Text="{Binding SystemStatusBody}" Style="{StaticResource MutedTextStyle}" Margin="0,5,0,0" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <Grid>
+      <Grid.ColumnDefinitions><ColumnDefinition Width="1.12*" /><ColumnDefinition Width="0.88*" /></Grid.ColumnDefinitions>
+      <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+
+      <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource CardStyle}" Margin="0,0,8,12" MinHeight="235">
+        <Grid>
+          <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="46" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+          <StackPanel Orientation="Horizontal"><TextBlock Text="Processor" Style="{StaticResource SectionHeadingStyle}" /><TextBlock Text=" · LIVE" Foreground="{DynamicResource Accent}" FontSize="9" FontWeight="Bold" Margin="8,4,0,0" /></StackPanel>
+          <Grid Grid.Row="1" Margin="0,4,0,0">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+            <controls:CpuGauge Grid.Column="0" Value="{Binding CpuPercent}" AutomationProperties.Name="CPU utilization gauge" AutomationProperties.HelpText="Represents current processor utilization from Windows system times." />
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0,0,4">
+              <TextBlock Text="{Binding CpuPercentText}" Foreground="{DynamicResource TextPrimary}" FontSize="34" FontWeight="Light" />
+              <TextBlock Text="{Binding CpuStatus}" Foreground="{DynamicResource TextMuted}" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,0" />
+              <TextBlock Text="{Binding CpuFrequencyText}" Foreground="{DynamicResource Blue}" FontSize="11" Margin="0,10,0,0" />
+            </StackPanel>
+          </Grid>
+          <controls:HistoryChart Grid.Row="2" Values="{Binding CpuHistory}" Stroke="{DynamicResource Accent}" Height="42" AutomationProperties.Name="Recent CPU utilization history; use arrow keys when focused to inspect exact samples" />
+          <Grid Grid.Row="3" Margin="0,3,0,0">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+            <StackPanel><TextBlock Text="{Binding CpuName}" Foreground="{DynamicResource TextPrimary}" FontSize="11.5" TextTrimming="CharacterEllipsis" /><TextBlock Text="{Binding HistoryWindowLabel}" Style="{StaticResource MutedTextStyle}" FontSize="10" Margin="0,3,0,0" /></StackPanel>
+            <TextBlock Grid.Column="1" Text="{Binding UpdateText}" Style="{StaticResource MutedTextStyle}" FontSize="10" VerticalAlignment="Bottom" />
+          </Grid>
+        </Grid>
+      </Border>
+
+      <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource CardStyle}" Margin="8,0,0,12" MinHeight="235">
+        <Grid>
+          <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+          <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+            <StackPanel><TextBlock Text="Cooling fan" Style="{StaticResource SectionHeadingStyle}" /><TextBlock Text="Measured sensor speed" Style="{StaticResource MutedTextStyle}" FontSize="10.5" Margin="0,3,0,0" /></StackPanel>
+            <ComboBox Grid.Column="1" ItemsSource="{Binding Fans}" SelectedItem="{Binding SelectedFan}" DisplayMemberPath="Name" Width="125" MaxDropDownHeight="190" Visibility="{Binding HasFanChoices, Converter={StaticResource BooleanToVisibilityConverter}}" ToolTip="Select an available fan sensor" />
+          </Grid>
+          <Grid Grid.Row="1" Margin="0,8,0,0">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="112" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+            <controls:FanVisual Grid.Column="0" Width="108" Height="108" Rpm="{Binding SelectedFan.Rpm}" FanState="{Binding SelectedFan.State}" AutomationProperties.Name="Cooling fan illustration" AutomationProperties.HelpText="Rotation speed is scaled for visibility; the RPM label is the sensor value." />
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
+              <TextBlock Text="{Binding FanRpmText}" Foreground="{DynamicResource TextPrimary}" FontSize="19" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <TextBlock Text="{Binding FanStatus}" Foreground="{DynamicResource TextMuted}" FontSize="10.5" TextWrapping="Wrap" Margin="0,5,0,0" />
+            </StackPanel>
+          </Grid>
+          <TextBlock Grid.Row="2" Text="{Binding SelectedFan.Source, TargetNullValue=Sensor source unavailable}" Style="{StaticResource MutedTextStyle}" FontSize="10" TextTrimming="CharacterEllipsis" />
+        </Grid>
+      </Border>
+
+      <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource CardStyle}" Margin="0,0,8,12" MinHeight="220">
+        <StackPanel>
+          <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+            <StackPanel><TextBlock Text="Memory" Style="{StaticResource SectionHeadingStyle}" /><TextBlock Text="Physical RAM available to Windows" Style="{StaticResource MutedTextStyle}" FontSize="10.5" Margin="0,3,0,0" /></StackPanel>
+            <TextBlock Grid.Column="1" Text="{Binding MemoryPercentText}" Foreground="{DynamicResource Blue}" FontSize="22" FontWeight="SemiBold" VerticalAlignment="Center" />
+          </Grid>
+          <ProgressBar Height="8" Margin="0,18,0,15" Maximum="100" Value="{Binding MemoryPercent}" Background="{DynamicResource SurfaceRaised}" Foreground="{DynamicResource Blue}" BorderThickness="0" AutomationProperties.Name="Physical memory utilization" Visibility="{Binding HasMemory, Converter={StaticResource BooleanToVisibilityConverter}}" />
+          <Grid>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+            <StackPanel><TextBlock Text="In use" Style="{StaticResource MutedTextStyle}" FontSize="10" /><TextBlock Text="{Binding MemoryUsedText}" Foreground="{DynamicResource TextPrimary}" FontSize="17" Margin="0,3,0,0" /></StackPanel>
+            <StackPanel Grid.Column="1"><TextBlock Text="Available" Style="{StaticResource MutedTextStyle}" FontSize="10" /><TextBlock Text="{Binding MemoryAvailableText}" Foreground="{DynamicResource TextPrimary}" FontSize="17" Margin="0,3,0,0" /></StackPanel>
+          </Grid>
+          <TextBlock Text="{Binding InstalledMemoryText}" Style="{StaticResource MutedTextStyle}" FontSize="10.5" Margin="0,11,0,0" />
+          <TextBlock Text="{Binding MemoryCommitText}" Foreground="{DynamicResource Purple}" FontSize="10.5" Margin="0,4,0,0" />
+          <controls:HistoryChart Values="{Binding MemoryHistory}" Stroke="{DynamicResource Blue}" Height="34" Margin="0,8,0,0" AutomationProperties.Name="Recent physical memory utilization history" />
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource CardStyle}" Margin="8,0,0,12" MinHeight="220">
+        <StackPanel>
+          <TextBlock Text="Graphics" Style="{StaticResource SectionHeadingStyle}" />
+          <TextBlock Text="{Binding GpuName}" Foreground="{DynamicResource TextPrimary}" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0" />
+          <Grid Margin="0,12,0,3"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+            <TextBlock Text="GPU utilization" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" />
+            <TextBlock Grid.Column="1" Text="{Binding GpuPercentText}" Foreground="{DynamicResource TextPrimary}" FontSize="16" FontWeight="SemiBold" />
+          </Grid>
+          <ProgressBar Height="7" Maximum="100" Value="{Binding GpuPercent}" Background="{DynamicResource SurfaceRaised}" Foreground="{DynamicResource Purple}" BorderThickness="0" AutomationProperties.Name="GPU utilization" Visibility="{Binding HasGpuLoad, Converter={StaticResource BooleanToVisibilityConverter}}" />
+          <controls:HistoryChart Values="{Binding GpuHistory}" Stroke="{DynamicResource Purple}" Height="42" Margin="0,10,0,0" AutomationProperties.Name="Recent graphics utilization history" />
+          <StackPanel Orientation="Horizontal" Margin="0,5,0,0"><TextBlock Text="GPU temperature · " Style="{StaticResource MutedTextStyle}" FontSize="10.5" /><TextBlock Text="{Binding GpuTemperatureText}" Style="{StaticResource MutedTextStyle}" FontSize="10.5" /></StackPanel>
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="2" Grid.Column="0" Style="{StaticResource CardStyle}" Margin="0,0,8,12" MinHeight="150">
+        <StackPanel>
+          <TextBlock Text="CPU temperature" Style="{StaticResource SectionHeadingStyle}" />
+          <Grid Margin="0,9,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+            <TextBlock Text="{Binding CpuTemperatureText}" Foreground="{DynamicResource TextPrimary}" FontSize="27" FontWeight="Light" />
+            <TextBlock Grid.Column="1" Text="Measured sensor value · no single universal threshold" Style="{StaticResource MutedTextStyle}" FontSize="10.5" Margin="14,1,0,0" VerticalAlignment="Center" />
+          </Grid>
+          <TextBlock Text="{Binding CpuTemperatureSource}" Style="{StaticResource MutedTextStyle}" FontSize="10.5" Margin="0,7,0,0" />
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="2" Grid.Column="1" Style="{StaticResource CardStyle}" Margin="8,0,0,12" MinHeight="150">
+        <StackPanel>
+          <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+            <StackPanel><TextBlock Text="Disk activity" Style="{StaticResource SectionHeadingStyle}" /><TextBlock Text="Windows performance counter" Style="{StaticResource MutedTextStyle}" FontSize="10.5" Margin="0,3,0,0" /></StackPanel>
+            <TextBlock Grid.Column="1" Text="{Binding DiskActivityText}" Foreground="{DynamicResource TextPrimary}" FontSize="19" VerticalAlignment="Center" />
+          </Grid>
+          <controls:HistoryChart Values="{Binding DiskHistory}" Stroke="{DynamicResource Accent}" Height="47" Margin="0,12,0,0" AutomationProperties.Name="Recent total disk activity history" />
+          <StackPanel Orientation="Horizontal" Margin="0,7,0,0"><TextBlock Text="Power plan · " Style="{StaticResource MutedTextStyle}" FontSize="10.5" /><TextBlock Text="{Binding PowerPlanText}" Style="{StaticResource MutedTextStyle}" FontSize="10.5" /></StackPanel>
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="3" Grid.ColumnSpan="2" Style="{StaticResource CardStyle}" Padding="19">
+        <StackPanel>
+          <Grid Margin="0,0,0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+            <StackPanel><TextBlock Text="Storage volumes" Style="{StaticResource SectionHeadingStyle}" /><TextBlock Text="Available space from Windows · drive health is not inferred from free space" Style="{StaticResource MutedTextStyle}" FontSize="10.5" Margin="0,3,0,0" /></StackPanel>
+            <Button Grid.Column="1" Content="View storage" Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="Storage" Style="{StaticResource SecondaryButtonStyle}" Padding="12,7" FontSize="11" />
+          </Grid>
+          <ItemsControl ItemsSource="{Binding Snapshot.Drives}">
+            <ItemsControl.ItemTemplate><DataTemplate>
+              <Grid Margin="0,8,0,2">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="180" /><ColumnDefinition Width="*" /><ColumnDefinition Width="170" /></Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center"><TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimary}" FontSize="12" FontWeight="SemiBold" /><TextBlock Text="{Binding Model, TargetNullValue=Model unavailable}" Foreground="{DynamicResource TextMuted}" FontSize="10" TextTrimming="CharacterEllipsis" Margin="0,3,8,0" /></StackPanel>
+                <ProgressBar Grid.Column="1" Height="8" Maximum="100" Value="{Binding UsedPercent}" Background="{DynamicResource SurfaceRaised}" Foreground="{DynamicResource Accent}" BorderThickness="0" VerticalAlignment="Center" ToolTip="Used capacity; not a drive-health measure." />
+                <TextBlock Grid.Column="2" Text="{Binding FreeText}" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Right" />
+              </Grid>
+            </DataTemplate></ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <TextBlock Text="Storage details are unavailable until Windows reports a ready fixed drive." Margin="0,6,0,0">
+            <TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource MutedTextStyle}"><Setter Property="Visibility" Value="Collapsed" /><Style.Triggers><DataTrigger Binding="{Binding HasDrives}" Value="False"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+          </TextBlock>
+        </StackPanel>
+      </Border>
+    </Grid>
+  </StackPanel>
+</UserControl>

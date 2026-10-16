@@ -1,0 +1,23 @@
+# Build output
+**/bin/
+**/obj/
+artifacts/
+publish/
+TestResults/
+.tools/
+*.zip
+*.user
+*.suo
+
+# Local IDE and diagnostic data
+.vs/
+.idea/
+*.log
+*.dmp
+
+# Signing material must never be committed
+*.pfx
+*.p12
+*.snk
+*.cer
+*.key
