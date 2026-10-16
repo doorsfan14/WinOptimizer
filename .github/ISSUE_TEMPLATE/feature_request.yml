@@ -1,0 +1,24 @@
+name: Feature request
+description: Propose a focused feature or improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: user_problem
+    attributes:
+      label: User problem
+      description: What task or question should WinOptimizer help with?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+    validations:
+      required: true
+  - type: textarea
+    id: safety
+    attributes:
+      label: Data, permissions, and recovery considerations
+      description: If this changes system state, describe preview, backup, verification, and undo.
+    validations:
+      required: false

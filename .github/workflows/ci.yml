@@ -1,0 +1,38 @@
+name: Windows CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Restore
+        run: dotnet restore .\tests\WinOptimizer.Tests\WinOptimizer.Tests.csproj --configfile .\NuGet.Config
+      - name: Run unit and visualization tests
+        run: dotnet test .\tests\WinOptimizer.Tests\WinOptimizer.Tests.csproj --configuration Release --no-restore
+      - name: Check Pages links
+        run: node .\tests\WinOptimizer.Tests\website.test.mjs
+      - name: Publish x64 app folder
+        run: dotnet publish .\src\WinOptimizer.App\WinOptimizer.App.csproj --configuration Release --runtime win-x64 --self-contained false --output .\artifacts\publish\win-x64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WinOptimizer-win-x64-${{ github.sha }}
+          path: artifacts/publish/win-x64/
+          if-no-files-found: error
+          retention-days: 14

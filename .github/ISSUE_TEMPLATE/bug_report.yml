@@ -1,0 +1,38 @@
+name: Bug report
+description: Report a reproducible application problem
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Remove personal paths, usernames, serial numbers, and secrets. Do not upload dumps or registry exports.
+  - type: input
+    id: version
+    attributes:
+      label: WinOptimizer version or commit
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows edition and build
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce and expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+    validations:
+      required: true
+  - type: textarea
+    id: hardware
+    attributes:
+      label: Relevant hardware and displayed sensor source
+      description: Share only details needed to reproduce. Sensor serials are not needed.
+    validations:
+      required: false
