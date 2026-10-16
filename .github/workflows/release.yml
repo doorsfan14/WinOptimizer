@@ -2,7 +2,7 @@ name: Build release packages
 
 on:
   create:
-    branches: ['release/v*']
+    branches: ['release/v*-final']
 
 permissions:
   contents: write
@@ -38,7 +38,7 @@ jobs:
         with:
           name: WinOptimizer 26.0.0
           tag_name: v26.0.0
-          target_commitish: release/v26.0.0
+          target_commitish: ${{ github.sha }}
           prerelease: true
           body: |
             WinOptimizer 26.0.0 is an early preview release. Read the included release notes before installing.

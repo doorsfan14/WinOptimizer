@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 8573)
-Total output lines: 553
-
 using System.IO;
 using System.Collections.ObjectModel;
 using System.Windows;
@@ -263,7 +260,43 @@ public sealed class StartupViewModel : PageViewModel
         try
         {
             var results = await _manager.ScanAsync();
-   …573 tokens truncated…pplying { get => _isApplying; private set { if (Set(ref _isApplying, value)) CleanCommand.NotifyCanExecuteChanged(); } }
+            Items.Clear();
+            foreach (var item in results) Items.Add(item);
+            Status = $"{results.Count(item => item.IsEnabled)} enabled items · {results.Count(item => !item.IsEnabled)} backed-up disabled items · impact data is unavailable unless Windows provides it.";
+        }
+        catch (Exception ex) { Status = "Startup entries could not be read."; AppLog.Write("Startup scan failed.", ex); }
+        finally { IsScanning = false; }
+    }
+    private async Task ToggleAsync(StartupItem? item)
+    {
+        if (item is null || !item.CanChange) return;
+        var action = item.IsEnabled ? "Disable" : "Restore";
+        var detail = item.IsEnabled
+            ? $"Remove this current-user registry value from Windows startup and keep a local backup?\n\n{item.Name}\n{item.Command}\n\nThis will not stop a program that is already running."
+            : $"Restore this backed-up current-user startup value?\n\n{item.Name}\n{item.Command}";
+        if (MessageBox.Show(detail, $"{action} startup item?", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+        var outcome = _manager.SetEnabled(item, !item.IsEnabled);
+        Status = outcome.Message;
+        await _history.AddAsync(new ActivityEntry(Guid.NewGuid(), DateTimeOffset.Now,
+            $"{action} startup item: {item.Name}", outcome.Message,
+            outcome.Succeeded ? "Verified" : "Not changed", outcome.Succeeded ? item.Id : null));
+        await RefreshAsync();
+        await _changed();
+    }
+}
+
+public sealed class StorageViewModel : PageViewModel
+{
+    private readonly SafeCleanupService _cleanup;
+    private readonly ActivityLog _history;
+    private CleanupPreview? _preview;
+    private bool _isScanning;
+    private bool _isApplying;
+    private string _status = "Only fixed drives that Windows reports as ready are shown.";
+    public ObservableCollection<StorageDriveReading> Drives { get; } = [];
+    public CleanupPreview? Preview { get => _preview; private set { if (Set(ref _preview, value)) { Raise(nameof(PreviewSummary)); Raise(nameof(PreviewReady)); Raise(nameof(HasPreview)); CleanCommand?.NotifyCanExecuteChanged(); } } }
+    public bool IsScanning { get => _isScanning; private set => Set(ref _isScanning, value); }
+    public bool IsApplying { get => _isApplying; private set { if (Set(ref _isApplying, value)) CleanCommand.NotifyCanExecuteChanged(); } }
     public string Status { get => _status; private set => Set(ref _status, value); }
     public string PreviewSummary => Preview is null ? "Review older temporary files" :
         $"{Preview.Candidates.Count} eligible files · {MetricsMath.FormatBytes(Preview.TotalBytes)} · changed before {Preview.Cutoff.ToLocalTime():MMM d, yyyy}";
@@ -517,4 +550,3 @@ public sealed class SettingsViewModel : PageViewModel
         catch (Exception ex) { SaveStatus = "Could not save settings."; AppLog.Write("Settings could not be saved.", ex); }
     }
 }
-
