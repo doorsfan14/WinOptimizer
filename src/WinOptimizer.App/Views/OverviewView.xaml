@@ -69,7 +69,7 @@
             <StackPanel><TextBlock Text="Memory" Style="{StaticResource SectionHeadingStyle}" /><TextBlock Text="Physical RAM available to Windows" Style="{StaticResource MutedTextStyle}" FontSize="10.5" Margin="0,3,0,0" /></StackPanel>
             <TextBlock Grid.Column="1" Text="{Binding MemoryPercentText}" Foreground="{DynamicResource Blue}" FontSize="22" FontWeight="SemiBold" VerticalAlignment="Center" />
           </Grid>
-          <ProgressBar Height="8" Margin="0,18,0,15" Maximum="100" Value="{Binding MemoryPercent}" Background="{DynamicResource SurfaceRaised}" Foreground="{DynamicResource Blue}" BorderThickness="0" AutomationProperties.Name="Physical memory utilization" Visibility="{Binding HasMemory, Converter={StaticResource BooleanToVisibilityConverter}}" />
+          <ProgressBar Height="8" Margin="0,18,0,15" Maximum="100" Value="{Binding MemoryPercent, Mode=OneWay}" Background="{DynamicResource SurfaceRaised}" Foreground="{DynamicResource Blue}" BorderThickness="0" AutomationProperties.Name="Physical memory utilization" Visibility="{Binding HasMemory, Converter={StaticResource BooleanToVisibilityConverter}}" />
           <Grid>
             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
             <StackPanel><TextBlock Text="In use" Style="{StaticResource MutedTextStyle}" FontSize="10" /><TextBlock Text="{Binding MemoryUsedText}" Foreground="{DynamicResource TextPrimary}" FontSize="17" Margin="0,3,0,0" /></StackPanel>
@@ -89,7 +89,7 @@
             <TextBlock Text="GPU utilization" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" />
             <TextBlock Grid.Column="1" Text="{Binding GpuPercentText}" Foreground="{DynamicResource TextPrimary}" FontSize="16" FontWeight="SemiBold" />
           </Grid>
-          <ProgressBar Height="7" Maximum="100" Value="{Binding GpuPercent}" Background="{DynamicResource SurfaceRaised}" Foreground="{DynamicResource Purple}" BorderThickness="0" AutomationProperties.Name="GPU utilization" Visibility="{Binding HasGpuLoad, Converter={StaticResource BooleanToVisibilityConverter}}" />
+          <ProgressBar Height="7" Maximum="100" Value="{Binding GpuPercent, Mode=OneWay}" Background="{DynamicResource SurfaceRaised}" Foreground="{DynamicResource Purple}" BorderThickness="0" AutomationProperties.Name="GPU utilization" Visibility="{Binding HasGpuLoad, Converter={StaticResource BooleanToVisibilityConverter}}" />
           <controls:HistoryChart Values="{Binding GpuHistory}" Stroke="{DynamicResource Purple}" Height="42" Margin="0,10,0,0" AutomationProperties.Name="Recent graphics utilization history" />
           <StackPanel Orientation="Horizontal" Margin="0,5,0,0"><TextBlock Text="GPU temperature · " Style="{StaticResource MutedTextStyle}" FontSize="10.5" /><TextBlock Text="{Binding GpuTemperatureText}" Style="{StaticResource MutedTextStyle}" FontSize="10.5" /></StackPanel>
         </StackPanel>
@@ -128,7 +128,7 @@
               <Grid Margin="0,8,0,2">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="180" /><ColumnDefinition Width="*" /><ColumnDefinition Width="170" /></Grid.ColumnDefinitions>
                 <StackPanel VerticalAlignment="Center"><TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimary}" FontSize="12" FontWeight="SemiBold" /><TextBlock Text="{Binding Model, TargetNullValue=Model unavailable}" Foreground="{DynamicResource TextMuted}" FontSize="10" TextTrimming="CharacterEllipsis" Margin="0,3,8,0" /></StackPanel>
-                <ProgressBar Grid.Column="1" Height="8" Maximum="100" Value="{Binding UsedPercent}" Background="{DynamicResource SurfaceRaised}" Foreground="{DynamicResource Accent}" BorderThickness="0" VerticalAlignment="Center" ToolTip="Used capacity; not a drive-health measure." />
+                <ProgressBar Grid.Column="1" Height="8" Maximum="100" Value="{Binding UsedPercent, Mode=OneWay}" Background="{DynamicResource SurfaceRaised}" Foreground="{DynamicResource Accent}" BorderThickness="0" VerticalAlignment="Center" ToolTip="Used capacity; not a drive-health measure." />
                 <TextBlock Grid.Column="2" Text="{Binding FreeText}" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Right" />
               </Grid>
             </DataTemplate></ItemsControl.ItemTemplate>
@@ -141,3 +141,4 @@
     </Grid>
   </StackPanel>
 </UserControl>
+

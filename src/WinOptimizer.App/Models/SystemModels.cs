@@ -36,6 +36,7 @@ public sealed record StorageDriveReading(
     public double FreePercent => MetricsMath.Percent((double)FreeBytes, TotalBytes);
     public string FreeText => $"{MetricsMath.FormatBytes(FreeBytes)} free";
     public string CapacityText => $"{MetricsMath.FormatBytes(UsedBytes)} used of {MetricsMath.FormatBytes(TotalBytes)}";
+    public string DriveOptionText => $"{Name}  ·  {FileSystem}  ·  {MetricsMath.FormatBytes(FreeBytes)} free";
     public string SpaceStatus => FreePercent < 10 ? "Very little space available" : FreePercent < 20 ? "Free space is limited" : FreeText;
 }
 
@@ -167,6 +168,7 @@ public sealed record ActivityEntry(
     string? UndoData = null)
 {
     public bool CanUndo => !string.IsNullOrWhiteSpace(UndoData);
+    public string UndoActionLabel => UndoData?.StartsWith("power-plan:", StringComparison.Ordinal) == true ? "Restore previous plan" : "Reverse startup change";
 }
 
 public sealed class UserPreferences
@@ -177,3 +179,4 @@ public sealed class UserPreferences
     public int PollIntervalSeconds { get; set; } = 2;
     public int HistoryDurationMinutes { get; set; } = 5;
 }
+

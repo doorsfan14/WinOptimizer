@@ -11,7 +11,7 @@
         <TextBlock Text="Dark and light themes update the complete interface. System follows the Windows app-color preference." Style="{StaticResource MutedTextStyle}" FontSize="10.5" Margin="0,6,0,0" />
         <TextBlock Text="Monitoring interval · seconds" Foreground="{DynamicResource TextPrimary}" FontSize="11.5" FontWeight="SemiBold" Margin="0,18,0,6" />
         <ComboBox ItemsSource="{Binding PollOptions}" SelectedItem="{Binding PollInterval}" MinHeight="36" MaxWidth="310" HorizontalAlignment="Left" AutomationProperties.Name="Monitoring interval in seconds" />
-        <TextBlock Text="Monitoring slows to at least 10 seconds when the window is minimized. The history buffer is bounded and kept in memory." Style="{StaticResource MutedTextStyle}" FontSize="10.5" Margin="0,6,0,0" />
+        <TextBlock Text="Monitoring slows to at least 10 seconds when minimized. Hardware sensors refresh no more often than every 5 seconds to reduce sensor overhead; the history buffer is bounded and held in memory." Style="{StaticResource MutedTextStyle}" FontSize="10.5" Margin="0,6,0,0" />
         <TextBlock Text="Visible history duration · minutes" Foreground="{DynamicResource TextPrimary}" FontSize="11.5" FontWeight="SemiBold" Margin="0,18,0,6" />
         <ComboBox ItemsSource="{Binding HistoryOptions}" SelectedItem="{Binding HistoryDuration}" MinHeight="36" MaxWidth="310" HorizontalAlignment="Left" AutomationProperties.Name="History duration in minutes" />
       </StackPanel>
@@ -34,3 +34,4 @@
     </Border>
   </StackPanel>
 </UserControl>
+

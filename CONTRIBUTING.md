@@ -31,3 +31,4 @@ The WPF project needs Windows targeting to execute. Keep unit tests independent 
 - Keep dependencies small and document third-party licensing.
 
 Pull requests should explain the user-facing change, risk, validation performed, and any Windows/hardware cases not exercised. Never claim a Windows build passed unless the workflow or a local Windows build did pass.
+

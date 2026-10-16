@@ -38,3 +38,4 @@ public partial class App : Application
     private void OnDispatcherException(object sender, DispatcherUnhandledExceptionEventArgs e) =>
         AppLog.Write("An unhandled interface error occurred.", e.Exception);
 }
+

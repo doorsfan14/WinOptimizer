@@ -1,5 +1,5 @@
 #define AppName "WinOptimizer"
-#define AppVersion "0.1.0"
+#define AppVersion "26.0.0"
 #define AppExeName "WinOptimizer.exe"
 #define PublishDir "..\artifacts\publish\win-x64"
 
@@ -39,3 +39,4 @@ Name: "{autodesktop}\WinOptimizer"; Filename: "{app}\{#AppExeName}"; Tasks: desk
 
 [Run]
 Filename: "{app}\{#AppExeName}"; Description: "Launch WinOptimizer"; Flags: nowait postinstall skipifsilent
+

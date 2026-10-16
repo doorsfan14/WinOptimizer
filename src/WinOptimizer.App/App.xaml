@@ -6,7 +6,9 @@
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="/WinOptimizer;component/Theme.xaml" />
+        <ResourceDictionary Source="/WinOptimizer;component/Styles.xaml" />
       </ResourceDictionary.MergedDictionaries>
     </ResourceDictionary>
   </Application.Resources>
 </Application>
+

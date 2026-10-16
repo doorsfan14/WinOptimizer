@@ -6,14 +6,17 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyName>WinOptimizer</AssemblyName>
     <RootNamespace>WinOptimizer</RootNamespace>
-    <Version>0.1.0</Version>
+    <Version>26.0.0</Version>
     <Authors>WinOptimizer contributors</Authors>
     <Description>Understand and maintain your Windows PC with clear, hardware-aware tools.</Description>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
     <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
   </PropertyGroup>
   <ItemGroup>
+    <Resource Include="Assets\Fonts\PlusJakartaSans[wght].ttf" />
+    <Content Include="Assets\Fonts\OFL.txt" CopyToOutputDirectory="PreserveNewest" />
     <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.6" />
     <PackageReference Include="System.Management" Version="10.0.2" />
   </ItemGroup>
 </Project>
+

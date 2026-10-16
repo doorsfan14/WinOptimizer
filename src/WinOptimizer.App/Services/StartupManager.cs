@@ -232,3 +232,4 @@ public sealed class StartupManager
 
     private sealed record StartupBackup(string Id, string ValueName, string Command, string KeyPath, string View, string ValueKind, string Location);
 }
+

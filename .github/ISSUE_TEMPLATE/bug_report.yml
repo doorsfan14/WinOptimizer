@@ -36,3 +36,4 @@ body:
       description: Share only details needed to reproduce. Sensor serials are not needed.
     validations:
       required: false
+

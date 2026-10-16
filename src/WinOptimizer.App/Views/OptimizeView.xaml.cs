@@ -6,3 +6,4 @@ public partial class OptimizeView : UserControl
 {
     public OptimizeView() => InitializeComponent();
 }
+

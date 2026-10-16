@@ -21,3 +21,4 @@ Include the affected version/commit, Windows edition/build, impact, and minimal 
 ## Safe handling
 
 Treat diagnostics and screenshots as potentially personal. Do not ask users to disable Defender, Firewall, UAC, Windows Update, or other security controls to troubleshoot WinOptimizer.
+

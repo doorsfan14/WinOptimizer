@@ -16,7 +16,7 @@
             <StackPanel VerticalAlignment="Center"><TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimary}" FontSize="16" FontWeight="SemiBold" /><TextBlock Text="{Binding FileSystem}" Foreground="{DynamicResource TextMuted}" FontSize="10" Margin="0,4,0,0" /><TextBlock Text="{Binding Model, TargetNullValue=Drive model unavailable}" Foreground="{DynamicResource TextMuted}" FontSize="10" TextTrimming="CharacterEllipsis" Margin="0,4,10,0" /></StackPanel>
             <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="15,0">
               <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Capacity used" Foreground="{DynamicResource TextMuted}" FontSize="10.5" /><TextBlock Grid.Column="1" Text="{Binding UsedPercent, StringFormat={}{0:0}%}" Foreground="{DynamicResource TextPrimary}" FontSize="10.5" /></Grid>
-              <ProgressBar Height="9" Margin="0,7,0,8" Maximum="100" Value="{Binding UsedPercent}" Background="{DynamicResource SurfaceRaised}" Foreground="{DynamicResource Accent}" BorderThickness="0" AutomationProperties.Name="Volume used capacity" />
+              <ProgressBar Height="9" Margin="0,7,0,8" Maximum="100" Value="{Binding UsedPercent, Mode=OneWay}" Background="{DynamicResource SurfaceRaised}" Foreground="{DynamicResource Accent}" BorderThickness="0" AutomationProperties.Name="Volume used capacity" />
               <TextBlock Text="{Binding CapacityText}" Foreground="{DynamicResource TextMuted}" FontSize="10.5" />
             </StackPanel>
             <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right"><TextBlock Text="{Binding FreeText}" Foreground="{DynamicResource TextPrimary}" FontSize="16" HorizontalAlignment="Right" /><TextBlock Text="{Binding SpaceStatus}" Foreground="{DynamicResource Warning}" FontSize="10" HorizontalAlignment="Right" Margin="0,4,0,0" /></StackPanel>
@@ -46,3 +46,4 @@
     </Border>
   </StackPanel>
 </UserControl>
+

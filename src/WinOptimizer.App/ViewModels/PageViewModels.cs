@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 8573)
+Total output lines: 553
+
 using System.IO;
 using System.Collections.ObjectModel;
 using System.Windows;
@@ -260,43 +263,7 @@ public sealed class StartupViewModel : PageViewModel
         try
         {
             var results = await _manager.ScanAsync();
-            Items.Clear();
-            foreach (var item in results) Items.Add(item);
-            Status = $"{results.Count(item => item.IsEnabled)} enabled items · {results.Count(item => !item.IsEnabled)} backed-up disabled items · impact data is unavailable unless Windows provides it.";
-        }
-        catch (Exception ex) { Status = "Startup entries could not be read."; AppLog.Write("Startup scan failed.", ex); }
-        finally { IsScanning = false; }
-    }
-    private async Task ToggleAsync(StartupItem? item)
-    {
-        if (item is null || !item.CanChange) return;
-        var action = item.IsEnabled ? "Disable" : "Restore";
-        var detail = item.IsEnabled
-            ? $"Remove this current-user registry value from Windows startup and keep a local backup?\n\n{item.Name}\n{item.Command}\n\nThis will not stop a program that is already running."
-            : $"Restore this backed-up current-user startup value?\n\n{item.Name}\n{item.Command}";
-        if (MessageBox.Show(detail, $"{action} startup item?", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
-        var outcome = _manager.SetEnabled(item, !item.IsEnabled);
-        Status = outcome.Message;
-        await _history.AddAsync(new ActivityEntry(Guid.NewGuid(), DateTimeOffset.Now,
-            $"{action} startup item: {item.Name}", outcome.Message,
-            outcome.Succeeded ? "Verified" : "Not changed", outcome.Succeeded ? item.Id : null));
-        await RefreshAsync();
-        await _changed();
-    }
-}
-
-public sealed class StorageViewModel : PageViewModel
-{
-    private readonly SafeCleanupService _cleanup;
-    private readonly ActivityLog _history;
-    private CleanupPreview? _preview;
-    private bool _isScanning;
-    private bool _isApplying;
-    private string _status = "Only fixed drives that Windows reports as ready are shown.";
-    public ObservableCollection<StorageDriveReading> Drives { get; } = [];
-    public CleanupPreview? Preview { get => _preview; private set { if (Set(ref _preview, value)) { Raise(nameof(PreviewSummary)); Raise(nameof(PreviewReady)); Raise(nameof(HasPreview)); CleanCommand?.NotifyCanExecuteChanged(); } } }
-    public bool IsScanning { get => _isScanning; private set => Set(ref _isScanning, value); }
-    public bool IsApplying { get => _isApplying; private set { if (Set(ref _isApplying, value)) CleanCommand.NotifyCanExecuteChanged(); } }
+   …573 tokens truncated…pplying { get => _isApplying; private set { if (Set(ref _isApplying, value)) CleanCommand.NotifyCanExecuteChanged(); } }
     public string Status { get => _status; private set => Set(ref _status, value); }
     public string PreviewSummary => Preview is null ? "Review older temporary files" :
         $"{Preview.Candidates.Count} eligible files · {MetricsMath.FormatBytes(Preview.TotalBytes)} · changed before {Preview.Cutoff.ToLocalTime():MMM d, yyyy}";
@@ -354,20 +321,104 @@ public sealed class StorageViewModel : PageViewModel
 public sealed class OptimizeViewModel : PageViewModel
 {
     private string _status = "Recommendations are based on Windows measurements and a read-only scan.";
+    private string _driveStatus = "Windows will choose the appropriate maintenance for this drive's media type.";
+    private StorageDriveReading? _selectedDrive;
+    private bool _isDriveMaintenanceRunning;
     public ObservableCollection<OptimizationRecommendation> Recommendations { get; } = [];
+    public ObservableCollection<StorageDriveReading> Drives { get; } = [];
     public string Status { get => _status; set => Set(ref _status, value); }
+    public string DriveStatus { get => _driveStatus; private set => Set(ref _driveStatus, value); }
+    public StorageDriveReading? SelectedDrive { get => _selectedDrive; set { if (Set(ref _selectedDrive, value)) OptimizeDriveCommand.NotifyCanExecuteChanged(); } }
+    public bool IsDriveMaintenanceRunning { get => _isDriveMaintenanceRunning; private set { if (Set(ref _isDriveMaintenanceRunning, value)) OptimizeDriveCommand.NotifyCanExecuteChanged(); } }
     public RelayCommand ActionCommand { get; }
+    public RelayCommand ReviewAllCommand { get; }
+    public RelayCommand WindowsFeaturesCommand { get; }
+    public RelayCommand CompanionToolsCommand { get; }
+    public AsyncRelayCommand OptimizeDriveCommand { get; }
     private readonly Action<string> _navigate;
-    public OptimizeViewModel(Action<string> navigate) : base("Optimize", "Small, explainable actions that match the condition of this PC.")
+    private readonly DriveMaintenanceService _driveMaintenance;
+    private readonly ActivityLog _history;
+    public OptimizeViewModel(Action<string> navigate, DriveMaintenanceService driveMaintenance, ActivityLog history) : base("Optimize", "Careful, hardware-aware ways to make this PC feel more responsive.")
     {
-        _navigate = navigate;
+        _navigate = navigate; _driveMaintenance = driveMaintenance; _history = history;
         ActionCommand = new RelayCommand(id => { if (id is string value) _navigate(value); });
+        ReviewAllCommand = new RelayCommand(_ => ReviewAll());
+        WindowsFeaturesCommand = new RelayCommand(_ => OpenWindowsFeatures());
+        CompanionToolsCommand = new RelayCommand(url => OpenCompanionTool(url as string));
+        OptimizeDriveCommand = new AsyncRelayCommand(async _ => await OptimizeDriveAsync(), _ => SelectedDrive is not null && !IsDriveMaintenanceRunning);
     }
-    public void Update(IEnumerable<OptimizationRecommendation> recommendations)
+
+    private void ReviewAll()
+    {
+        var findings = Recommendations.Where(item => item.State == RecommendationState.Applicable).ToArray();
+        var summary = findings.Length == 0
+            ? "The latest scan found no currently applicable recommendations. You can still review startup apps, temporary-file cleanup, and drive maintenance below."
+            : string.Join("\n", findings.Select(item => $"• {item.Title} — {item.ExpectedBenefit}"));
+        MessageBox.Show($"Review before making changes\n\n{summary}\n\nNothing has been changed. Each item needs its own review because the trade-offs differ; temporary-file removal is permanent, and feature changes can require a restart.", "Optimize all · review", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private void OpenWindowsFeatures()
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("OptionalFeatures.exe") { UseShellExecute = true });
+            Status = "Windows Features opened. Review each item in Windows; changing components may require a restart.";
+        }
+        catch (Exception ex)
+        {
+            Status = "Windows Features could not be opened. Search Windows for “Turn Windows features on or off”.";
+            AppLog.Write("Could not open Windows Optional Features.", ex);
+        }
+    }
+
+    private static void OpenCompanionTool(string? url)
+    {
+        var allowed = url switch
+        {
+            "autoruns" => "https://learn.microsoft.com/sysinternals/downloads/autoruns",
+            "process-explorer" => "https://learn.microsoft.com/sysinternals/downloads/process-explorer",
+            "wiztree" => "https://www.diskanalyzer.com/download",
+            _ => null
+        };
+        if (allowed is null) return;
+        try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(allowed) { UseShellExecute = true }); }
+        catch (Exception ex) { AppLog.Write("Could not open a companion-tool download page.", ex); }
+    }
+    public void Update(IEnumerable<OptimizationRecommendation> recommendations, IEnumerable<StorageDriveReading> drives)
     {
         Recommendations.Clear();
         foreach (var recommendation in recommendations) Recommendations.Add(recommendation);
+        var priorDrive = SelectedDrive?.MountPoint;
+        Drives.Clear();
+        foreach (var drive in drives) Drives.Add(drive);
+        SelectedDrive = Drives.FirstOrDefault(drive => drive.MountPoint.Equals(priorDrive, StringComparison.OrdinalIgnoreCase)) ?? Drives.FirstOrDefault();
         Status = $"{Recommendations.Count(item => item.State == RecommendationState.Applicable)} applicable finding(s) · no changes are applied automatically.";
+    }
+
+    private async Task OptimizeDriveAsync()
+    {
+        if (SelectedDrive is not { } drive || DriveMaintenanceService.NormalizeVolume(drive.MountPoint) is not { } volume) return;
+        var result = MessageBox.Show(
+            $"Windows will run its media-aware maintenance on {volume}. The built-in /O operation chooses the Windows-supported method for the drive type. This can use disk activity and may take time; no files are removed. Windows may ask for administrator approval. Continue?",
+            "Review drive maintenance", MessageBoxButton.YesNo, MessageBoxImage.Information);
+        if (result != MessageBoxResult.Yes) return;
+
+        IsDriveMaintenanceRunning = true;
+        DriveStatus = $"Windows is running media-aware maintenance for {volume}. Follow the Windows progress window.";
+        try
+        {
+            var outcome = await _driveMaintenance.RunAsync(volume);
+            DriveStatus = outcome.Message;
+            await _history.AddAsync(new ActivityEntry(Guid.NewGuid(), DateTimeOffset.Now,
+                $"Drive maintenance · {volume}", outcome.Message,
+                outcome.Succeeded ? "Completed by Windows · no undo" : outcome.UserCancelled ? "Cancelled" : "Not completed"));
+        }
+        catch (Exception ex)
+        {
+            DriveStatus = "Drive maintenance did not complete. Check the local log for details.";
+            AppLog.Write("Drive maintenance operation failed.", ex);
+        }
+        finally { IsDriveMaintenanceRunning = false; }
     }
 }
 
@@ -375,14 +426,15 @@ public sealed class HistoryViewModel : PageViewModel
 {
     private readonly ActivityLog _history;
     private readonly StartupManager _startup;
+    private readonly PowerPlanService _powerPlans;
     public ObservableCollection<ActivityEntry> Items { get; } = [];
     private string _status = "Changes are recorded only on this computer.";
     public string Status { get => _status; private set => Set(ref _status, value); }
     public AsyncRelayCommand RefreshCommand { get; }
     public AsyncRelayCommand UndoCommand { get; }
-    public HistoryViewModel(ActivityLog history, StartupManager startup) : base("History", "A local record of reviewed and verified changes.")
+    public HistoryViewModel(ActivityLog history, StartupManager startup, PowerPlanService powerPlans) : base("History", "A local record of reviewed and verified changes.")
     {
-        _history = history; _startup = startup;
+        _history = history; _startup = startup; _powerPlans = powerPlans;
         RefreshCommand = new AsyncRelayCommand(async _ => await RefreshAsync());
         UndoCommand = new AsyncRelayCommand(async entry => await UndoAsync(entry as ActivityEntry));
     }
@@ -396,6 +448,19 @@ public sealed class HistoryViewModel : PageViewModel
     private async Task UndoAsync(ActivityEntry? entry)
     {
         if (entry?.UndoData is not { } id) return;
+        if (id.StartsWith("power-plan:", StringComparison.Ordinal) && TryReadPowerPlanUndo(id, out var previousPlan, out var expectedPlan))
+        {
+            if (MessageBox.Show("Restore the power plan that was active before this change? The current plan is checked first so a later Windows change is preserved.",
+                    "Restore previous power plan", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+            var powerResult = await Task.Run(() => _powerPlans.Restore(previousPlan, expectedPlan));
+            Status = powerResult.Message;
+            await _history.AddAsync(new ActivityEntry(Guid.NewGuid(), DateTimeOffset.Now,
+                powerResult.Succeeded ? "Restored previous power plan" : "Power-plan restoration", powerResult.Message,
+                powerResult.Succeeded ? "Verified by Windows" : powerResult.IsConflict ? "Conflict · not changed" : "Not restored",
+                powerResult.Succeeded ? $"power-plan:{expectedPlan:D}:{previousPlan:D}" : null));
+            await RefreshAsync();
+            return;
+        }
         var current = (await _startup.ScanAsync()).FirstOrDefault(item => item.Id == id && item.CanChange);
         if (current is null) { Status = "The original startup entry or its local backup could not be found."; return; }
         var desiredState = !current.IsEnabled;
@@ -408,6 +473,13 @@ public sealed class HistoryViewModel : PageViewModel
             $"Restored startup configuration: {current.Name}", result.Message,
             result.Succeeded ? "Verified" : "Not changed", result.Succeeded ? id : null));
         await RefreshAsync();
+    }
+
+    private static bool TryReadPowerPlanUndo(string data, out Guid previous, out Guid expected)
+    {
+        previous = Guid.Empty; expected = Guid.Empty;
+        var parts = data.Split(':');
+        return parts.Length == 3 && Guid.TryParse(parts[1], out previous) && Guid.TryParse(parts[2], out expected);
     }
 }
 
@@ -423,10 +495,10 @@ public sealed class SettingsViewModel : PageViewModel
     private string _saveStatus = "Settings are stored locally and can be changed at any time.";
     public IReadOnlyList<ThemeChoice> ThemeOptions { get; } = Enum.GetValues<ThemeChoice>();
     public IReadOnlyList<RecommendationLevel> LevelOptions { get; } = Enum.GetValues<RecommendationLevel>();
-    public IReadOnlyList<int> PollOptions { get; } = [1, 2, 5, 10];
+    public IReadOnlyList<int> PollOptions { get; } = [2, 5, 10];
     public IReadOnlyList<int> HistoryOptions { get; } = [1, 5, 15, 30];
     public ThemeChoice Theme { get => _theme; set { if (Set(ref _theme, value)) { _preferences.Theme = value; ThemeService.Apply(value); Save(); } } }
-    public int PollInterval { get => _pollInterval; set { if (Set(ref _pollInterval, value)) { _preferences.PollIntervalSeconds = Math.Clamp(value, 1, 10); Save(); } } }
+    public int PollInterval { get => _pollInterval; set { if (Set(ref _pollInterval, value)) { _preferences.PollIntervalSeconds = Math.Clamp(value, 2, 10); Save(); } } }
     public int HistoryDuration { get => _historyDuration; set { if (Set(ref _historyDuration, value)) { _preferences.HistoryDurationMinutes = value; Save(); } } }
     public RecommendationLevel Level { get => _level; set { if (Set(ref _level, value)) { _preferences.RecommendationLevel = value; Save(); } } }
     public string SaveStatus { get => _saveStatus; private set => Set(ref _saveStatus, value); }
@@ -445,3 +517,4 @@ public sealed class SettingsViewModel : PageViewModel
         catch (Exception ex) { SaveStatus = "Could not save settings."; AppLog.Write("Settings could not be saved.", ex); }
     }
 }
+

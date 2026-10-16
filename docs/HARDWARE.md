@@ -38,3 +38,4 @@ The app references `LibreHardwareMonitorLib` 0.9.6, whose upstream project is di
 4. Provide the Windows build, hardware model, displayed source/sensor label, and whether a vendor utility can read the value. Do not share serial numbers or full diagnostic dumps.
 
 Do not disable security software, install untrusted drivers, or run random sensor scripts to make a reading appear.
+

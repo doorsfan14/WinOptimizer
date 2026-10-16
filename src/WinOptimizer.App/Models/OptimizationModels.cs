@@ -5,7 +5,10 @@ public sealed record RecommendationContext(
     int EnabledCurrentUserStartupItems,
     int EligibleTemporaryFiles,
     ulong EligibleTemporaryBytes,
-    RecommendationLevel Level = RecommendationLevel.Safe);
+    RecommendationLevel Level = RecommendationLevel.Safe,
+    bool HighPerformancePlanAvailable = false,
+    bool IsOnAcPower = false,
+    Guid? ActivePowerPlanId = null);
 
 public sealed record ChangeRecord(
     string Id,
@@ -14,3 +17,4 @@ public sealed record ChangeRecord(
     string Result,
     string? BackupPath = null,
     string? Details = null);
+

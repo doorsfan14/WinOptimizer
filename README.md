@@ -2,7 +2,7 @@
 
 **Clear, hardware-aware insight into your Windows PC.** WinOptimizer combines live system monitoring with cautious, reviewable maintenance tools. It is an early open-source project; measurements and recommendations are shown only when the relevant Windows interface reports them.
 
-> **Development status:** the Windows app and automated tests build locally, but no installer has been released yet. Sensor coverage still needs validation across physical PCs. The GitHub Pages site intentionally links to the repository and releases page rather than claiming a download exists.
+> **Release status:** WinOptimizer 26.0.0 is a preview prerelease, not a stable release. Downloads appear on GitHub Releases after the Windows packaging workflow succeeds. The installer is unsigned and hardware sensor coverage varies by PC.
 
 ## What works in this first implementation
 
@@ -11,15 +11,24 @@
 - Read-only first-run discovery and preferences, with Safe recommendations selected by default.
 - Startup inventory. Only current-user Run/RunOnce entries are offered for change; elevated machine entries and folder shortcuts remain read-only. Changes are backed up, confirmed, verified, recorded, and restorable when the original state is still compatible.
 - A preview-first cleanup limited to old top-level temporary/cache files in the signed-in user's Temp folder. It excludes folders, newer files, and paths outside that scope.
+- A Windows-native drive-maintenance action for one selected fixed volume. It uses `defrag.exe /O` so Windows chooses its media-aware operation, asks for administrator approval through UAC, and reports Windows' completion without claiming a speed gain.
+- An optional High performance power-plan recommendation only when Windows confirms AC power and the built-in plan exists. The active plan is verified and saved for conflict-aware restoration from History; heat, fan-noise, and energy trade-offs are explained.
+- A guided “Review all” summary brings current eligible recommendations together without silently applying them. Windows Optional Features opens Microsoft's own feature manager; WinOptimizer does not guess which components the user needs or disable them in bulk.
+- Memory-pressure explanations lead to real process usage. There is deliberately no working-set “RAM cleaner,” which can make Windows reload data and increase disk activity rather than improve responsiveness.
+- Optional download links for Autoruns and Process Explorer (Microsoft Sysinternals), and WizTree, open the publishers' official pages. WinOptimizer does not bundle or silently install third-party tools.
+- A custom, keyboard-accessible window title bar and correctly scaled byte labels (KB, MB, GB, TB) for storage and memory values.
+- Plus Jakarta Sans is bundled in the desktop app and website under its included SIL Open Font License.
+- Hardware sensors refresh at most once every five seconds independently of the faster CPU/memory polling, keeping telemetry overhead lower.
 - Local settings, bounded activity history, local rolling logs, and actual light/dark/system theme switching.
 
 See [architecture](docs/ARCHITECTURE.md), [hardware and telemetry](docs/HARDWARE.md), and [optimization safety](docs/OPTIMIZATION_SAFETY.md) for implementation boundaries and limitations.
+See [release and installation notes](docs/RELEASES.md) for the 26.0.0 preview prerelease status, package contents, and install steps.
 
 ## Requirements
 
 - 64-bit Windows and the .NET 10 Desktop Runtime. The first package target is `win-x64`.
 - Microsoft currently lists Windows 11 and Windows 10 Enterprise/LTSC editions in the .NET 10 Windows support matrix. Windows 10 Home/Pro may be able to run the application but are outside that runtime support listing; see [Microsoft's Windows support matrix](https://learn.microsoft.com/dotnet/core/install/windows).
-- Standard-user access is sufficient for normal monitoring and user-level startup management. Some sensors or system-level readings can be unavailable without vendor support or elevated access; WinOptimizer does not elevate itself.
+- Standard-user access is sufficient for normal monitoring and user-level startup management. Only the explicitly selected Windows drive-maintenance action can request elevation through the standard UAC prompt; the app does not stay elevated.
 - Fan, temperature, GPU, drive-health, and some frequency readings depend on firmware, drivers, device support, and the available sensor interface.
 
 ## Build and run
@@ -61,3 +70,4 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) and the safety requirements before chang
 ## License
 
 WinOptimizer is distributed under the [GNU General Public License v3.0 or later](LICENSE). Third-party component licenses remain applicable to those components.
+

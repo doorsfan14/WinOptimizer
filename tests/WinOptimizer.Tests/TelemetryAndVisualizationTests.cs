@@ -48,6 +48,15 @@ public sealed class TelemetryAndVisualizationTests
         Assert.Equal("Windows still has physical memory available", MetricsMath.MemoryStatus(memory));
     }
 
+    [Theory]
+    [InlineData(1023UL, "1023 B")]
+    [InlineData(1024UL, "1.0 KB")]
+    [InlineData(1_048_576UL, "1.0 MB")]
+    [InlineData(1_073_741_824UL, "1.0 GB")]
+    [InlineData(1_099_511_627_776UL, "1.0 TB")]
+    public void Byte_format_uses_the_correct_binary_unit_scale(ulong bytes, string expected) =>
+        Assert.Equal(expected, MetricsMath.FormatBytes(bytes));
+
     [Fact]
     public void History_chart_maps_first_and_last_samples_to_plot_edges()
     {
@@ -157,3 +166,4 @@ public sealed class TelemetryAndVisualizationTests
         }
     }
 }
+

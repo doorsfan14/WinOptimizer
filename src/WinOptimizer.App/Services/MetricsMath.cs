@@ -22,7 +22,7 @@ public static class MetricsMath
 
     public static string FormatBytes(ulong bytes)
     {
-        string[] units = ["B", "KB", "GB", "TB", "PB"];
+        string[] units = ["B", "KB", "MB", "GB", "TB", "PB", "EB"];
         double amount = bytes;
         var unit = 0;
         while (amount >= 1024 && unit < units.Length - 1)
@@ -80,3 +80,4 @@ public sealed class HistoryBuffer<T>
         while (_items.Count > Capacity) _items.Dequeue();
     }
 }
+

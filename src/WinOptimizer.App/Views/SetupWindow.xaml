@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Welcome to WinOptimizer" Width="940" Height="650" MinWidth="850" MinHeight="600"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False" ResizeMode="CanResizeWithGrip"
-        Background="{DynamicResource AppBackground}" FontFamily="Segoe UI" UseLayoutRounding="True">
+        Background="{DynamicResource AppBackground}" FontFamily="pack://application:,,,/WinOptimizer;component/Assets/Fonts/#Plus Jakarta Sans" UseLayoutRounding="True">
   <Window.Resources><BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" /></Window.Resources>
   <Grid>
     <Grid.ColumnDefinitions><ColumnDefinition Width="286" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
@@ -31,7 +31,7 @@
       <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
       <StackPanel>
         <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="{Binding StepLabel}" Foreground="{DynamicResource Accent}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" /><TextBlock Grid.Column="1" Text="SETUP · READ ONLY" Foreground="{DynamicResource TextMuted}" FontSize="9" VerticalAlignment="Center" /></Grid>
-        <ProgressBar Height="3" Margin="0,12,0,0" Minimum="0" Maximum="3" Value="{Binding Stage}" Background="{DynamicResource SurfaceRaised}" Foreground="{DynamicResource Accent}" BorderThickness="0" />
+        <ProgressBar Height="3" Margin="0,12,0,0" Minimum="0" Maximum="3" Value="{Binding Stage, Mode=OneWay}" Background="{DynamicResource SurfaceRaised}" Foreground="{DynamicResource Accent}" BorderThickness="0" />
         <TextBlock Text="{Binding Title}" Foreground="{DynamicResource TextPrimary}" FontSize="25" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,25,0,0" />
         <TextBlock Text="{Binding Description}" Foreground="{DynamicResource TextMuted}" FontSize="12.5" TextWrapping="Wrap" Margin="0,8,0,0" />
       </StackPanel>
@@ -50,7 +50,7 @@
               </Grid>
             </StackPanel>
           </Border>
-          <TextBlock Text="WinOptimizer is still in development. Its source and safety notes are available in the project repository." Foreground="{DynamicResource TextMuted}" FontSize="10.5" TextWrapping="Wrap" Margin="2,13,0,0" />
+          <TextBlock Text="WinOptimizer 26.0.0 is a preview release. Sensor coverage varies by PC; review its source and safety notes before use." Foreground="{DynamicResource TextMuted}" FontSize="10.5" TextWrapping="Wrap" Margin="2,13,0,0" />
         </StackPanel>
 
         <StackPanel Visibility="{Binding IsCompatibility, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -105,3 +105,4 @@
     </Grid>
   </Grid>
 </Window>
+

@@ -21,7 +21,7 @@ public sealed class SettingsStore
         {
             if (!File.Exists(_path)) return new UserPreferences();
             var loaded = JsonSerializer.Deserialize<UserPreferences>(File.ReadAllText(_path), JsonOptions) ?? new UserPreferences();
-            loaded.PollIntervalSeconds = Math.Clamp(loaded.PollIntervalSeconds, 1, 10);
+            loaded.PollIntervalSeconds = Math.Clamp(loaded.PollIntervalSeconds, 2, 10);
             loaded.HistoryDurationMinutes = Math.Clamp(loaded.HistoryDurationMinutes, 1, 60);
             return loaded;
         }
@@ -95,22 +95,22 @@ public static class ThemeService
     private static readonly IReadOnlyDictionary<string, (string Dark, string Light)> Palette =
         new Dictionary<string, (string, string)>
         {
-            ["AppBackground"] = ("#0A1115", "#F0F4F3"),
-            ["SidebarBackground"] = ("#0E171C", "#E7EDEB"),
-            ["Surface"] = ("#131E24", "#FAFCFB"),
-            ["SurfaceRaised"] = ("#19262D", "#FFFFFF"),
-            ["Line"] = ("#293941", "#D7E1DE"),
-            ["TextPrimary"] = ("#F0F6F5", "#1B2A2C"),
-            ["TextMuted"] = ("#94A8B0", "#607478"),
-            ["Accent"] = ("#77D8CA", "#087F73"),
-            ["AccentSoft"] = ("#213D3D", "#DDF1ED"),
-            ["Blue"] = ("#87B7F7", "#356FB2"),
-            ["Warning"] = ("#EABF78", "#986416"),
-            ["Danger"] = ("#EF8F8F", "#AB4141"),
-            ["Purple"] = ("#B7A5F2", "#634DA5"),
-            ["ChartGrid"] = ("#28363D", "#DCE5E3"),
-            ["SidebarActive"] = ("#1A3436", "#D9ECE8"),
-            ["Overlay"] = ("#B70A1115", "#B7F0F4F3")
+            ["AppBackground"] = ("#080F16", "#F1F6F7"),
+            ["SidebarBackground"] = ("#0B151D", "#E8F0F2"),
+            ["Surface"] = ("#101D27", "#FBFDFD"),
+            ["SurfaceRaised"] = ("#162633", "#FFFFFF"),
+            ["Line"] = ("#233744", "#D6E3E7"),
+            ["TextPrimary"] = ("#ECF6F8", "#162B34"),
+            ["TextMuted"] = ("#91A8B5", "#58717D"),
+            ["Accent"] = ("#6CE5D1", "#087F73"),
+            ["AccentSoft"] = ("#173A3D", "#DDF2EF"),
+            ["Blue"] = ("#79B9F8", "#356FB2"),
+            ["Warning"] = ("#F0C77D", "#986416"),
+            ["Danger"] = ("#F08E9B", "#AB4141"),
+            ["Purple"] = ("#B8A6FF", "#634DA5"),
+            ["ChartGrid"] = ("#203440", "#DCE7EA"),
+            ["SidebarActive"] = ("#142F38", "#DAECEF"),
+            ["Overlay"] = ("#B7080F16", "#B7F1F6F7")
         };
 
     public static event Action? ThemeChanged;
@@ -161,3 +161,4 @@ public static class AppLog
         catch { /* Logging must never interrupt monitoring or an undo operation. */ }
     }
 }
+

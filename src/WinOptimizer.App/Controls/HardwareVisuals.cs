@@ -326,3 +326,4 @@ public sealed class HistoryChart : FrameworkElement
         InvalidateVisual();
     }
 }
+

@@ -27,6 +27,7 @@ public sealed record SystemCapabilities(
 /// <summary>Reads Windows counters and capability-checked LibreHardwareMonitor sensors.</summary>
 public sealed class WindowsTelemetryProvider : ITelemetryProvider
 {
+    private static readonly TimeSpan HardwareSensorRefreshInterval = TimeSpan.FromSeconds(5);
     private readonly object _sync = new();
     private readonly ProcessUsageSampler _processSampler = new();
     private readonly DiskCounter _diskCounter = new();
@@ -41,6 +42,8 @@ public sealed class WindowsTelemetryProvider : ITelemetryProvider
     private bool _haveCpuBaseline;
     private DateTimeOffset _lastPowerPlanRead;
     private string? _powerPlan;
+    private SensorReadingSet? _cachedHardwareReadings;
+    private DateTimeOffset? _lastHardwareSensorRead;
     private bool _disposed;
 
     public Task<SystemSnapshot> SampleAsync(CancellationToken cancellationToken = default) =>
@@ -90,7 +93,7 @@ public sealed class WindowsTelemetryProvider : ITelemetryProvider
         }
 
         var memory = ReadMemory();
-        var devices = ReadHardwareSensors();
+        var devices = ReadHardwareSensorsAtInterval();
         var drives = ReadDrives();
         if (DateTimeOffset.UtcNow - _lastPowerPlanRead > TimeSpan.FromSeconds(30))
         {
@@ -212,6 +215,17 @@ public sealed class WindowsTelemetryProvider : ITelemetryProvider
             return new SensorReadingSet([], [], null, null, null, ReadingState.Error,
                 "A hardware sensor could not be read. Windows resource measurements are still available.");
         }
+    }
+
+    private SensorReadingSet ReadHardwareSensorsAtInterval()
+    {
+        var now = DateTimeOffset.UtcNow;
+        if (_cachedHardwareReadings is null || SensorRefreshPolicy.ShouldRefresh(_lastHardwareSensorRead, now, HardwareSensorRefreshInterval))
+        {
+            _cachedHardwareReadings = ReadHardwareSensors();
+            _lastHardwareSensorRead = now;
+        }
+        return _cachedHardwareReadings!;
     }
 
     private static void UpdateTree(IHardware hardware, ICollection<IHardware> all)
@@ -453,6 +467,12 @@ public sealed class WindowsTelemetryProvider : ITelemetryProvider
     }
 }
 
+internal static class SensorRefreshPolicy
+{
+    public static bool ShouldRefresh(DateTimeOffset? lastRead, DateTimeOffset now, TimeSpan interval) =>
+        lastRead is null || interval <= TimeSpan.Zero || now - lastRead.Value >= interval;
+}
+
 internal sealed class ProcessUsageSampler
 {
     private readonly Dictionary<int, (TimeSpan Cpu, DateTimeOffset At)> _previous = [];
@@ -547,43 +567,6 @@ internal sealed class DiskCounter : IDisposable
 
 internal static class PowerPlanReader
 {
-    public static string? Read()
-    {
-        IntPtr active = IntPtr.Zero;
-        try
-        {
-            if (PowerGetActiveScheme(IntPtr.Zero, out active) != 0 || active == IntPtr.Zero) return null;
-            var scheme = Marshal.PtrToStructure<Guid>(active);
-            Guid subgroup = Guid.Empty;
-            Guid setting = Guid.Empty;
-            uint size = 0;
-            var status = PowerReadFriendlyName(IntPtr.Zero, ref scheme, ref subgroup, ref setting, ref size, IntPtr.Zero);
-            if (size > 0)
-            {
-                var buffer = Marshal.AllocHGlobal((int)size);
-                try
-                {
-                    if (PowerReadFriendlyName(IntPtr.Zero, ref scheme, ref subgroup, ref setting, ref size, buffer) == 0)
-                    {
-                        var name = Marshal.PtrToStringUni(buffer)?.TrimEnd('\0');
-                        if (!string.IsNullOrWhiteSpace(name)) return name;
-                    }
-                }
-                finally { Marshal.FreeHGlobal(buffer); }
-            }
-            return scheme.ToString("D") switch
-            {
-                "381b4222-f694-41f0-9685-ff5bb260df2e" => "Balanced",
-                "a1841308-3541-4fab-bc81-f71556f20b4a" => "Power saver",
-                "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c" => "High performance",
-                _ => $"Custom plan ({scheme:D})"
-            };
-        }
-        catch { return null; }
-        finally { if (active != IntPtr.Zero) LocalFree(active); }
-    }
-
-    [DllImport("powrprof.dll")] private static extern uint PowerGetActiveScheme(IntPtr userRootPowerKey, out IntPtr activePolicyGuid);
-    [DllImport("powrprof.dll", CharSet = CharSet.Unicode)] private static extern uint PowerReadFriendlyName(IntPtr userRootPowerKey, ref Guid schemeGuid, ref Guid subgroupOfPowerSettingsGuid, ref Guid powerSettingGuid, ref uint bufferSize, IntPtr buffer);
-    [DllImport("kernel32.dll")] private static extern IntPtr LocalFree(IntPtr memory);
+    public static string? Read() => new PowerPlanService().ReadStatus().ActivePlanName;
 }
+

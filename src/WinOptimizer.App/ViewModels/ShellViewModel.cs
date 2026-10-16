@@ -23,6 +23,8 @@ public sealed class MainViewModel : ViewModelBase, IDisposable
     private readonly SafeCleanupService _cleanup = new();
     private readonly ActivityLog _activity = new();
     private readonly RecommendationEngine _recommendations = new();
+    private readonly PowerPlanService _powerPlans = new();
+    private readonly DriveMaintenanceService _driveMaintenance = new();
     private CancellationTokenSource? _monitorCancellation;
     private Task? _monitorTask;
     private bool _windowVisible = true;
@@ -63,8 +65,8 @@ public sealed class MainViewModel : ViewModelBase, IDisposable
         Performance = new PerformanceViewModel(() => _telemetry.GetProcessesAsync(), Overview.CpuHistory, Overview.MemoryHistory);
         Startup = new StartupViewModel(_startupManager, _activity, ReloadRecommendationsAsync);
         Storage = new StorageViewModel(_cleanup, _activity, RefreshNow);
-        Optimize = new OptimizeViewModel(ResolveRecommendationAction);
-        History = new HistoryViewModel(_activity, _startupManager);
+        Optimize = new OptimizeViewModel(ResolveRecommendationAction, _driveMaintenance, _activity);
+        History = new HistoryViewModel(_activity, _startupManager, _powerPlans);
         Settings = new SettingsViewModel(preferences, settingsStore, OpenSetupWizard);
         Settings.PropertyChanged += (_, args) =>
         {
@@ -74,7 +76,7 @@ public sealed class MainViewModel : ViewModelBase, IDisposable
                 _ = ScanRecommendationsAsync();
         };
         SetupWizard = new SetupWizardViewModel(preferences, settingsStore, _telemetry, _startupManager, _cleanup,
-            _recommendations, ApplySnapshot, ApplyRecommendations);
+            _recommendations, _powerPlans, ApplySnapshot, ApplyRecommendations);
         _currentPage = Overview; _selectedNavigation = Navigation[0];
         NavigateCommand = new RelayCommand(Navigate);
         OpenSettingsCommand = new RelayCommand(_ => Navigate("Settings"));
@@ -94,7 +96,7 @@ public sealed class MainViewModel : ViewModelBase, IDisposable
     {
         while (!token.IsCancellationRequested)
         {
-            var seconds = _windowVisible ? Math.Clamp(_preferences.PollIntervalSeconds, 1, 10) : Math.Max(10, _preferences.PollIntervalSeconds * 5);
+            var seconds = _windowVisible ? Math.Clamp(_preferences.PollIntervalSeconds, 2, 10) : Math.Max(10, _preferences.PollIntervalSeconds * 5);
             try { await Task.Delay(TimeSpan.FromSeconds(seconds), token); }
             catch (OperationCanceledException) { break; }
             await RefreshSnapshotAsync(token);
@@ -146,9 +148,11 @@ public sealed class MainViewModel : ViewModelBase, IDisposable
         {
             var startup = await _startupManager.ScanAsync();
             var preview = await _cleanup.PreviewAsync();
+            var power = _powerPlans.ReadStatus();
             ApplyRecommendations(_recommendations.Evaluate(new RecommendationContext(
                 Snapshot, startup.Count(item => item.IsEnabled && item.Scope == "Current user"),
-                preview.Candidates.Count, preview.TotalBytes, _preferences.RecommendationLevel)));
+                preview.Candidates.Count, preview.TotalBytes, _preferences.RecommendationLevel,
+                power.HighPerformancePlanAvailable, power.IsOnAcPower, power.ActivePlanId)));
         }
         catch (Exception ex)
         {
@@ -161,21 +165,54 @@ public sealed class MainViewModel : ViewModelBase, IDisposable
     {
         if (Startup.Items.Count == 0) return;
         var preview = await _cleanup.PreviewAsync();
+        var power = _powerPlans.ReadStatus();
         ApplyRecommendations(_recommendations.Evaluate(new RecommendationContext(Snapshot,
-            Startup.Items.Count(item => item.IsEnabled && item.Scope == "Current user"), preview.Candidates.Count, preview.TotalBytes, _preferences.RecommendationLevel)));
+            Startup.Items.Count(item => item.IsEnabled && item.Scope == "Current user"), preview.Candidates.Count, preview.TotalBytes, _preferences.RecommendationLevel,
+            power.HighPerformancePlanAvailable, power.IsOnAcPower, power.ActivePlanId)));
     }
 
-    private void ApplyRecommendations(IReadOnlyList<OptimizationRecommendation> items) => Optimize.Update(items);
+    private void ApplyRecommendations(IReadOnlyList<OptimizationRecommendation> items) => Optimize.Update(items, Snapshot.Drives);
 
     private void ResolveRecommendationAction(string id)
     {
+        if (id == "power.performance")
+        {
+            _ = ApplyPerformancePowerPlanAsync();
+            return;
+        }
         Navigate(id switch
         {
             "storage.low-space" => "Storage",
             "startup.review" => "Startup",
+            "tool.startup" => "Startup",
+            "tool.cleanup" => "Storage",
             "memory.pressure" => "Performance",
             _ => "Overview"
         });
+    }
+
+    private async Task ApplyPerformancePowerPlanAsync()
+    {
+        var status = _powerPlans.ReadStatus();
+        if (!status.IsOnAcPower || !status.HighPerformancePlanAvailable)
+        {
+            Optimize.Status = "This change is only offered when Windows confirms AC power and exposes the built-in plan.";
+            await ScanRecommendationsAsync();
+            return;
+        }
+        if (MessageBox.Show(
+                $"Switch from {status.ActivePlanName ?? "the current plan"} to {status.HighPerformancePlanName ?? "High performance"}?\n\nThis may keep performance more responsive during sustained work. It can use more energy, create more heat, and increase fan noise. WinOptimizer records the current plan so you can restore it from History. The change will be blocked if AC power is disconnected.",
+                "Review power-plan change", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+
+        Optimize.Status = "Windows is switching the active power plan…";
+        var result = await Task.Run(_powerPlans.ApplyHighPerformance);
+        Optimize.Status = result.Message;
+        await _activity.AddAsync(new ActivityEntry(Guid.NewGuid(), DateTimeOffset.Now,
+            "Power plan · High performance", result.Message,
+            result.Succeeded ? "Verified by Windows" : "Not changed",
+            result.Succeeded && result.PreviousPlanId is { } previous && result.AppliedPlanId is { } applied
+                ? $"power-plan:{previous:D}:{applied:D}" : null));
+        await ScanRecommendationsAsync();
     }
 
     private void RefreshNow() => _ = RefreshSnapshotAsync(_monitorCancellation?.Token ?? CancellationToken.None);
@@ -197,3 +234,4 @@ public sealed class MainViewModel : ViewModelBase, IDisposable
         _telemetry.Dispose();
     }
 }
+

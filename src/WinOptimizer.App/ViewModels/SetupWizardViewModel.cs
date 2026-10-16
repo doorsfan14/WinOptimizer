@@ -11,6 +11,7 @@ public sealed class SetupWizardViewModel : ViewModelBase
     private readonly StartupManager _startup;
     private readonly SafeCleanupService _cleanup;
     private readonly RecommendationEngine _recommendations;
+    private readonly PowerPlanService _powerPlans;
     private readonly Action<SystemSnapshot> _applySnapshot;
     private readonly Action<IReadOnlyList<OptimizationRecommendation>> _applyRecommendations;
     private CancellationTokenSource? _scanCancellation;
@@ -27,10 +28,10 @@ public sealed class SetupWizardViewModel : ViewModelBase
     public bool IsBusy { get => _isBusy; private set { if (Set(ref _isBusy, value)) { Raise(nameof(CanGoBack)); Raise(nameof(IsNextEnabled)); } } }
     public ThemeChoice Theme { get => _theme; set { if (Set(ref _theme, value)) { _preferences.Theme = value; ThemeService.Apply(value); } } }
     public RecommendationLevel Level { get => _level; set { if (Set(ref _level, value)) _preferences.RecommendationLevel = value; } }
-    public int PollInterval { get => _pollInterval; set { if (Set(ref _pollInterval, value)) _preferences.PollIntervalSeconds = Math.Clamp(value, 1, 10); } }
+    public int PollInterval { get => _pollInterval; set { if (Set(ref _pollInterval, value)) _preferences.PollIntervalSeconds = Math.Clamp(value, 2, 10); } }
     public IReadOnlyList<ThemeChoice> ThemeOptions { get; } = Enum.GetValues<ThemeChoice>();
     public IReadOnlyList<RecommendationLevel> LevelOptions { get; } = Enum.GetValues<RecommendationLevel>();
-    public IReadOnlyList<int> PollOptions { get; } = [1, 2, 5, 10];
+    public IReadOnlyList<int> PollOptions { get; } = [2, 5, 10];
     public string Status { get => _status; private set => Set(ref _status, value); }
     public string Findings { get => _findings; private set => Set(ref _findings, value); }
     public SystemCapabilities? Capabilities { get => _capabilities; private set { if (Set(ref _capabilities, value)) Raise(nameof(CompatibilitySummary)); } }
@@ -65,10 +66,10 @@ public sealed class SetupWizardViewModel : ViewModelBase
 
     public SetupWizardViewModel(UserPreferences preferences, SettingsStore store, ITelemetryProvider telemetry,
         StartupManager startup, SafeCleanupService cleanup, RecommendationEngine recommendations,
-        Action<SystemSnapshot> applySnapshot, Action<IReadOnlyList<OptimizationRecommendation>> applyRecommendations)
+        PowerPlanService powerPlans, Action<SystemSnapshot> applySnapshot, Action<IReadOnlyList<OptimizationRecommendation>> applyRecommendations)
     {
         _preferences = preferences; _store = store; _telemetry = telemetry; _startup = startup;
-        _cleanup = cleanup; _recommendations = recommendations; _applySnapshot = applySnapshot;
+        _cleanup = cleanup; _recommendations = recommendations; _powerPlans = powerPlans; _applySnapshot = applySnapshot;
         _applyRecommendations = applyRecommendations; _theme = preferences.Theme; _level = preferences.RecommendationLevel; _pollInterval = preferences.PollIntervalSeconds;
         BackCommand = new RelayCommand(_ => Stage--, _ => CanGoBack);
         NextCommand = new AsyncRelayCommand(async _ => await NextAsync());
@@ -111,8 +112,10 @@ public sealed class SetupWizardViewModel : ViewModelBase
             Status = "Reviewing current-user startup entries and older temporary files…";
             var startup = await _startup.ScanAsync(token);
             var cleanup = await _cleanup.PreviewAsync(token);
+            var power = _powerPlans.ReadStatus();
             var findings = _recommendations.Evaluate(new RecommendationContext(snapshot,
-                startup.Count(item => item.IsEnabled && item.Scope == "Current user"), cleanup.Candidates.Count, cleanup.TotalBytes, Level));
+                startup.Count(item => item.IsEnabled && item.Scope == "Current user"), cleanup.Candidates.Count, cleanup.TotalBytes, Level,
+                power.HighPerformancePlanAvailable, power.IsOnAcPower, power.ActivePlanId));
             _applyRecommendations(findings);
             var cpu = Capabilities.CpuName ?? "Processor details unavailable";
             var graphics = Capabilities.GpuNames.Count == 0 ? "No graphics name exposed" : string.Join(", ", Capabilities.GpuNames);
@@ -141,3 +144,4 @@ public sealed class SetupWizardViewModel : ViewModelBase
         Dismissed?.Invoke();
     }
 }
+

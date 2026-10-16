@@ -8,6 +8,20 @@ public sealed class RecommendationEngine
     public IReadOnlyList<OptimizationRecommendation> Evaluate(RecommendationContext context)
     {
         var items = new List<OptimizationRecommendation>();
+        if (context.IsOnAcPower && context.HighPerformancePlanAvailable && context.ActivePowerPlanId is { } activePlan)
+        {
+            var isApplied = activePlan == PowerPlanService.HighPerformanceSchemeId;
+            items.Add(new OptimizationRecommendation(
+                "power.performance", "Choose a performance-focused power plan", "Power",
+                isApplied
+                    ? "Windows already reports the High performance plan as active. This can favor responsiveness under load, while using more power and potentially creating more heat or fan noise."
+                    : "This PC is connected to AC power and Windows exposes its built-in High performance plan. It can favor responsiveness under load; it does not guarantee a benchmark improvement.",
+                isApplied ? "No change needed" : "May keep the processor more responsive under sustained work",
+                "Windows power-plan state", RecommendationRisk.Moderate,
+                isApplied ? RecommendationState.AlreadyApplied : RecommendationState.Applicable,
+                isApplied ? "Already active" : "Switch plan", !isApplied));
+        }
+
         var systemDrive = context.Snapshot.Drives.FirstOrDefault(d =>
             string.Equals(d.MountPoint, Path.GetPathRoot(Environment.SystemDirectory), StringComparison.OrdinalIgnoreCase));
 
@@ -61,3 +75,4 @@ public sealed class RecommendationEngine
         return items;
     }
 }
+

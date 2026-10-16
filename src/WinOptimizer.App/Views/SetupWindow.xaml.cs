@@ -29,3 +29,4 @@ public partial class SetupWindow : Window
         await _viewModel.SkipForNowAsync();
     }
 }
+

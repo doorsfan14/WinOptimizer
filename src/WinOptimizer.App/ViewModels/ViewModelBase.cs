@@ -47,3 +47,4 @@ public sealed class AsyncRelayCommand(Func<object?, Task> execute, Predicate<obj
         }
     }
 }
+

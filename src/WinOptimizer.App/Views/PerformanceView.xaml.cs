@@ -6,3 +6,4 @@ public partial class PerformanceView : UserControl
 {
     public PerformanceView() => InitializeComponent();
 }
+

@@ -1,8 +1,8 @@
 name: Build release packages
 
 on:
-  push:
-    tags: ['v*']
+  create:
+    branches: ['release/v*']
 
 permissions:
   contents: write
@@ -36,7 +36,15 @@ jobs:
       - name: Publish release assets
         uses: softprops/action-gh-release@v2
         with:
+          name: WinOptimizer 26.0.0
+          tag_name: v26.0.0
+          target_commitish: release/v26.0.0
+          prerelease: true
+          body: |
+            WinOptimizer 26.0.0 is an early preview release. Read the included release notes before installing.
+            Hardware telemetry varies by PC. This release is unsigned, and Windows may show a publisher warning.
           generate_release_notes: true
           files: |
             artifacts/WinOptimizer-portable-win-x64.zip
-            artifacts/installer/WinOptimizer-Setup-0.1.0-win-x64.exe
+            artifacts/installer/WinOptimizer-Setup-26.0.0-win-x64.exe
+

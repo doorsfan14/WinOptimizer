@@ -9,3 +9,4 @@ Project maintainers are responsible for clarifying and enforcing these standards
 Report conduct concerns privately to the repository owner through GitHub. Do not post private or identifying information in a public issue. Maintainers will review reports promptly and handle them with discretion.
 
 This policy applies in project spaces and when someone is officially representing the project. It is adapted from the Contributor Covenant, version 2.1, available at <https://www.contributor-covenant.org/version/2/1/code_of_conduct.html>.
+
